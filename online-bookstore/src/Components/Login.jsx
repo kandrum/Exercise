@@ -1,11 +1,14 @@
 import React, {useState} from "react";
 import { useNavigate } from 'react-router-dom';
+import {useDispatch} from 'react-redux';
+import { verifysucess } from "../redux/slices/authenticate";
 
 function Login(){
     const [username, setusername]= useState('');
     const [password, setpassword]= useState('');
 
     const navigate =useNavigate();
+    const dispatch =useDispatch();
 
     const handleLogin = (e)=>{
         e.preventDefault();//prevernt default submission
@@ -13,7 +16,7 @@ function Login(){
         fetch('http://localhost:5000/login',
             {
                 method: 'POST',
-                headers:{
+                headers:{  
                     'Content-Type': 'application/json'
                 },
                 body: JSON.stringify({
@@ -34,6 +37,7 @@ function Login(){
         .then(data =>{
             console.log('Response from node',data)
             if(data.message === 'userfound'){
+                dispatch(verifysucess());
                 navigate('/home')
             }
         })

@@ -61,7 +61,7 @@ app.post('/register',(req,res)=>{
             res.status(500).json({error: 'Error inquery u have written',userId: result.insertId});
         }
         if(result.affectedRows>0){
-            console.log(result);
+            //console.log(result);
             res.status(200).json({message:'user added to database'})
         }else{
             res.status(500).json({message:'user failed to register'});
