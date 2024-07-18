@@ -1,6 +1,7 @@
 const express = require('express');
 const mysql = require('mysql');
 const cors = require('cors');
+const {generateTocken, verifyTocken} =require('./towken');
 const app = express();
 
 app.use(cors()); // Use CORS middleware
@@ -23,6 +24,8 @@ db.getConnection((err, connection) => {
     console.log('Successfully connected to the database');
     connection.release(); // Release the connection back to the pool
 });
+
+
 //=========================================================================================
 app.post('/login',(req,res)=>{
     const {username,password}=req.body;// what is parsed as json from frontend 
@@ -39,7 +42,8 @@ app.post('/login',(req,res)=>{
            // console.log(result);
             const user =result[0];
             if(password === user.password){
-                res.status(200).json({message:'userfound',user: user.username});
+                const tocken =generateTocken({username:user.username});//create tocken
+                res.status(200).json({message:'userfound',user: user.username,tocken:tocken});//wrap message u send to client in tocken
             }else{
                 res.status(401).json({message:'Invalid Password'});
             }
@@ -69,6 +73,19 @@ app.post('/register',(req,res)=>{
     });
 });
 //================================================================================
+app.get('/protected',(req,res)=>{
+    const tocken =req.headers['authorization'];
+    if(!tocken){
+        return res.status(201).json({meaasge: 'No tocken'});
+    }
+    const decode = verifyTocken(tocken);
+    if(!decode){
+        return res.status(500).json({message: 'Failed to authenticate'});
+    }
+    res.status(200).json({message: 'Protected route setup',user:decode.username});
+});
+
+
 app.get('/test', (req, res) => {
     res.send('Welcome to online_bookstore');
 });

@@ -1,14 +1,14 @@
 import React, {useState} from "react";
 import { useNavigate } from 'react-router-dom';
-import {useDispatch} from 'react-redux';
-import { verifysucess } from "../redux/slices/authenticate";
+//import {useDispatch} from 'react-redux';
+//import { verifysucess } from "../redux/slices/authenticate";
 
 function Login(){
     const [username, setusername]= useState('');
     const [password, setpassword]= useState('');
 
     const navigate =useNavigate();
-    const dispatch =useDispatch();
+    //const dispatch =useDispatch();
 
     const handleLogin = (e)=>{
         e.preventDefault();//prevernt default submission
@@ -37,7 +37,8 @@ function Login(){
         .then(data =>{
             console.log('Response from node',data)
             if(data.message === 'userfound'){
-                dispatch(verifysucess());
+                localStorage.setItem('token', data.tocken); // Ensure 'tocken' is used consistently
+                //dispatch(verifysucess());
                 navigate('/home')
             }
         })
