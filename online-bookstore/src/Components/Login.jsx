@@ -1,5 +1,7 @@
 import React, {useState} from "react";
 import { useNavigate } from 'react-router-dom';
+import {FaUser, FaLock} from 'react-icons/fa';
+import styles from '../styles/Login.module.css';
 //import {useDispatch} from 'react-redux';
 //import { verifysucess } from "../redux/slices/authenticate";
 
@@ -49,33 +51,38 @@ function Login(){
     };
     
     return(
-        <div>
-            <div>
-                <label>Username:</label>
-                <input
-                  type="text"
-                  id="username"
-                  value={username}
-                  onChange={(e)=>setusername(e.target.value)}
-                  
-                />
+        <div className={styles.container}>
+            <div className={styles.formGroup}>
+                <label className={styles.label}>Username:</label>
+                <div className={styles.inputContainer}>
+                    <FaUser className={styles.icon} />
+                    <input
+                        type="text"
+                        id="username"
+                        value={username}
+                        onChange={(e) => setusername(e.target.value)}
+                    />
+                </div>
+            </div>
+            <div className={styles.formGroup}>
+                <label className={styles.label}>Password:</label>
+                <div className={styles.inputContainer}>
+                    <FaLock className={styles.icon} />
+                    <input
+                        type="password"
+                        id="password"
+                        value={password}
+                        onChange={(e) => setpassword(e.target.value)}
+                    />
+                </div>
             </div>
             <div>
-                <label>Password:</label>
-                <input
-                  type="password"
-                  id="password"
-                  value={password}
-                  onChange={(e)=> setpassword(e.target.value)}
-                  
-                />
-            </div>
-            <div>
-                <button onClick={handleLogin}>
-                    submit
+                <button className={styles.button} onClick={handleLogin}>
+                    Submit
                 </button>
             </div>
         </div>
-    );
+    );    
+    
 }
  export {Login};
