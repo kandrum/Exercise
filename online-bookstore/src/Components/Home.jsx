@@ -1,19 +1,11 @@
 import React, { useState } from "react";
 import { FaShoppingCart } from "react-icons/fa";
-import { MenuItem, Select, InputLabel, FormControl, TextField, Button } from "@mui/material";
+import { MenuItem, Select, InputLabel, FormControl, Button } from "@mui/material";
 import styles from '../styles/Home.module.css';
 
 function Home() {
     const [genre, setGenre] = useState("");
     const [searchTerm, setSearchTerm] = useState("");
-
-    const handleGenreChange = (event) => {
-        setGenre(event.target.value);
-    };
-
-    const handleSearchChange = (event) => {
-        setSearchTerm(event.target.value);
-    };
 
     const handleSearch = () => {
         // Implement your search logic here
@@ -33,8 +25,9 @@ function Home() {
                         labelId="genre-label"
                         id="genre-select"
                         value={genre}
-                        onChange={handleGenreChange}
+                        onChange={(e) => setGenre(e.target.value)}
                         label="Genre"
+                        className={styles.selectOutlined}
                     >
                         <MenuItem value="">
                             <em>None</em>
@@ -51,7 +44,7 @@ function Home() {
                     type="text"
                     placeholder="Search by book name"
                     value={searchTerm}
-                    onChange={handleSearchChange}
+                    onChange={(e) => setSearchTerm(e.target.value)}
                     className={styles.searchInput}
                 />
                 <button onClick={handleSearch} className={styles.searchButton}>
