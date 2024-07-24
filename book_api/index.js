@@ -73,6 +73,49 @@ app.post('/register',(req,res)=>{
     });
 });
 //================================================================================
+/*app.get('/availablebooks',(req,res)=>{
+    const {genre,searchTerm}=req.query;
+    let sql ='select * from books where 1=1';
+      if(genre){sql=sql+ ` AND genre = ${mysql.escape(genre)}`;} //` AND genre = ${mysql.escape(genre)}`
+      if(searchTerm){sql=sql+` AND title LIKE ${mysql.escape('%'+ searchTerm + '%')}`;} // ` AND title LIKE ${mysql.escape('%' + searchTerm + '%')}`
+
+    db.query(sql,(err,result)=>{
+        if(err){
+            res.status(500).json({error:'Error in query u have written', details: err.message});
+        }
+        return res.json(result);
+    });
+}); */
+
+app.get('/availablebooks', (req, res) => {
+    const { genre, searchTerm, page = 1, limit = 3 } = req.query;
+    const offset = (page - 1) * limit;
+
+    let sql = 'SELECT * FROM books WHERE 1=1';
+    if (genre) sql += ` AND genre = ${mysql.escape(genre)}`;
+    if (searchTerm) sql += ` AND title LIKE ${mysql.escape('%' + searchTerm + '%')}`;
+    sql += ` LIMIT ${mysql.escape(parseInt(limit))} OFFSET ${mysql.escape(parseInt(offset))}`;
+
+    let countSql = 'SELECT COUNT(*) as total FROM books WHERE 1=1';
+    if (genre) countSql += ` AND genre = ${mysql.escape(genre)}`;
+    if (searchTerm) countSql += ` AND title LIKE ${mysql.escape('%' + searchTerm + '%')}`;
+
+    db.query(countSql, (err, countResult) => {
+        if (err) {
+            return res.status(500).json({ error: 'Error in count query', details: err.message });
+        }
+        db.query(sql, (err, result) => {
+            if (err) {
+                return res.status(500).json({ error: 'Error in query', details: err.message });
+            }
+            res.json({ books: result, totalRecords: countResult[0].total });
+        });
+    });
+});
+
+
+
+//========================================================================================
 app.get('/protected',(req,res)=>{
     const tocken =req.headers['authorization'];
     if(!tocken){
