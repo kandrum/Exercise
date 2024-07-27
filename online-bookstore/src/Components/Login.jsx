@@ -39,7 +39,9 @@ function Login(){
         .then(data =>{
             console.log('Response from node',data)
             if(data.message === 'userfound'){
-                localStorage.setItem('token', data.tocken); // Ensure 'tocken' is used consistently
+                localStorage.setItem('accessToken', data.accessToken);
+                localStorage.setItem('refreshToken', data.refreshToken);
+                //localStorage.setItem('token', data.tocken); // Ensure 'tocken' is used consistently
                 //dispatch(verifysucess());
                 navigate('/home')
             }

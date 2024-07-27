@@ -1,8 +1,16 @@
 const express = require('express');
 const mysql = require('mysql');
 const cors = require('cors');
+const client = require('./redis');
 const {generateTocken, verifyTocken} =require('./towken');
+const { promisify } = require('util');
+//const { stringify } = require('querystring');
+//const { access } = require('fs');
 const app = express();
+
+const getAsync =promisify(client.get).bind(client);
+const setAsync =promisify(client.set).bind(client);
+const delAsync =promisify(client.del).bind(client);
 
 app.use(cors()); // Use CORS middleware
 app.use(express.json()); // Parse incoming requests with JSON payloads
@@ -27,12 +35,12 @@ db.getConnection((err, connection) => {
 
 
 //=========================================================================================
-app.post('/login',(req,res)=>{
+app.post('/login',async (req,res)=>{
     const {username,password}=req.body;// what is parsed as json from frontend 
     const sql ='select * from users where username= ?';//write the query 
     
     //Execute query from Mysql
-    db.query(sql, [username], (err,result)=>{
+    db.query(sql, [username], async(err,result)=>{
         if(err){
             res.status(500).json({error:'Error in query u have written'});
             return;
@@ -42,8 +50,11 @@ app.post('/login',(req,res)=>{
            // console.log(result);
             const user =result[0];
             if(password === user.password){
-                const tocken =generateTocken({username:user.username});//create tocken
-                res.status(200).json({message:'userfound',user: user.username,tocken:tocken});//wrap message u send to client in tocken
+                const accessToken =generateTocken({username:user.username},'5m');
+                const refreshToken =generateTocken({username:user.username}, '7d');
+                await setAsync(refreshToken, JSON.stringify({ username: user.username }));
+                //const tocken =generateTocken({username:user.username});//create tocken
+                res.status(200).json({message:'userfound',user: user.username,accessToken,refreshToken});//wrap message u send to client in tocken
             }else{
                 res.status(401).json({message:'Invalid Password'});
             }
@@ -72,6 +83,36 @@ app.post('/register',(req,res)=>{
         }
     });
 });
+//====================================================================================
+app.post('/token', async (req, res) => {
+    const { refreshToken } = req.body;
+
+    console.log('Received refresh token:', refreshToken);
+
+    if (!refreshToken) {
+        return res.status(403).json({ message: "Refresh token required" });
+    }
+
+    const storedToken = await getAsync(refreshToken);
+    if (!storedToken) {
+        return res.status(403).json({ message: "Invalid refresh token" });
+    }
+
+    const user = verifyTocken(refreshToken);
+    if (!user) {
+        return res.status(403).json({ message: "Invalid refresh token" });
+    }
+
+    const newAccessToken = generateTocken({ username: user.username }, '2m');
+    const newRefreshToken = generateTocken({ username: user.username }, '5m');
+    await setAsync(newRefreshToken, JSON.stringify({ username: user.username }));
+
+    console.log('New tokens generated:', { accessToken: newAccessToken, refreshToken: newRefreshToken });
+
+    res.json({ accessToken: newAccessToken, refreshToken: newRefreshToken });
+});
+
+
 //================================================================================
 /*app.get('/availablebooks',(req,res)=>{
     const {genre,searchTerm}=req.query;
@@ -88,7 +129,7 @@ app.post('/register',(req,res)=>{
 }); */
 
 app.get('/availablebooks', (req, res) => {
-    const { genre, searchTerm, page = 1, limit = 3 } = req.query;
+    const { genre, searchTerm, page = 1, limit } = req.query;
     const offset = (page - 1) * limit;
 
     let sql = 'SELECT * FROM books WHERE 1=1';
@@ -114,7 +155,7 @@ app.get('/availablebooks', (req, res) => {
 });
 
 
-
+ 
 //========================================================================================
 app.get('/protected',(req,res)=>{
     const tocken =req.headers['authorization'];
@@ -127,7 +168,15 @@ app.get('/protected',(req,res)=>{
     }
     res.status(200).json({message: 'Protected route setup',user:decode.username});
 });
+//===========================================================================================
 
+//testing redis
+ async function init(){
+    const result =await client.get("message:2");
+    console.log("result ->", result);
+ };
+ init();
+ //==========================================================================================
 
 app.get('/test', (req, res) => {
     res.send('Welcome to online_bookstore');

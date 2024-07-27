@@ -9,12 +9,11 @@ function Home() {
     const [searchTerm, setSearchTerm] = useState("");
     const [books, setBooks] = useState([]);
     const [currentPage, setCurrentPage] = useState(1);
-    const recordsPerPage = 3;
+    const recordsPerPage = 4;
     const [totalRecords, setTotalRecords] = useState(0); // to store total number of records
 
     const location = useLocation();
-    const navigate = useNavigate();
-
+    
     const handleSearch = () => {
         setCurrentPage(1); // Reset to the first page on search
         fetchBooks(1); // Fetch books for the first page
@@ -26,24 +25,80 @@ function Home() {
         if (searchTerm) params.append('searchTerm', searchTerm);
         params.append('page', page);
         params.append('limit', recordsPerPage);
-
+    
+        const accessToken = localStorage.getItem('accessToken');
+    
         try {
-            const response = await fetch(`http://localhost:5000/availablebooks?${params.toString()}`);
+            const response = await fetch(`http://localhost:5000/availablebooks?${params.toString()}`, {
+                headers: {
+                    'Authorization': `Bearer ${accessToken}`
+                }
+            });
             if (!response.ok) {
-                throw new Error('Network response was not ok');
+                if (response.status === 401) {
+                    // Access token might be expired, try to refresh it
+                    const newAccessToken = await refreshAccessToken();
+                    if (newAccessToken) {
+                        // Retry the fetch with the new access token
+                        const retryResponse = await fetch(`http://localhost:5000/availablebooks?${params.toString()}`, {
+                            headers: {
+                                'Authorization': `Bearer ${newAccessToken}`
+                            }
+                        });
+                        if (!retryResponse.ok) {
+                            throw new Error('Network response was not ok on retry');
+                        }
+                        const retryData = await retryResponse.json();
+                        setBooks(retryData.books);
+                        setTotalRecords(retryData.totalRecords);
+                    }
+                } else {
+                    throw new Error('Network response was not ok');
+                }
+            } else {
+                const data = await response.json();
+                setBooks(data.books);
+                setTotalRecords(data.totalRecords);
             }
-            const data = await response.json();
-            console.log(data);
-            setBooks(data.books);
-            setTotalRecords(data.totalRecords);
         } catch (error) {
             console.error("Error in fetching books", error);
         }
     };
+    
+    const refreshAccessToken = async () => {
+        const refreshToken = localStorage.getItem('refreshToken');
+    
+        if (!refreshToken) {
+            console.error('No refresh token found');
+            return null;
+        }
+    
+        try {
+            const response = await fetch('http://localhost:5000/token', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ refreshToken })
+            });
+            if (!response.ok) {
+                throw new Error('Failed to refresh token');
+            }
+            const data = await response.json();
+            localStorage.setItem('accessToken', data.accessToken);
+            return data.accessToken;
+        } catch (error) {
+            console.error('Error refreshing token', error);
+            return null;
+        }
+    };
+    
 
     useEffect(() => {
-        fetchBooks(currentPage); // Fetch books when the component mounts or when location.search changes
+        fetchBooks(currentPage); // Fetch books when the component mounts or when location.search , or currentPage
     }, [location.search, currentPage]);
+
+    //console.log(location.search);
 
     const totalPages = Math.ceil(totalRecords / recordsPerPage); // Calculate total pages
 
