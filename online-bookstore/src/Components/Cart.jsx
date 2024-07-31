@@ -9,7 +9,7 @@ const CartItems = () => {
     useEffect(()=>{
         const total = addToCart. reduce((acc,book)=>acc+book.price ,0);
         setsum(total);
-    })
+    });
     return (
         <div>
             <h1>Cart Items</h1> {/* Add a heading to verify the component is rendering */}

@@ -100,7 +100,7 @@ function Home() {
         }
     };
     const toCart =(book) =>{
-        setaddToCart((prevCart) => {
+        setaddToCart((prevCart) => {     
             if(prevCart.some(cartBook => cartBook.id === book.id)){
                 return prevCart.filter(cartBook =>cartBook.id !== book.id)
             }else{
@@ -120,6 +120,16 @@ function Home() {
     }, [location.search, currentPage]);
 
     //console.log(location.search);
+
+    useEffect(() => {
+        const storedCart = JSON.parse(localStorage.getItem('addToCart')) || [];
+        setaddToCart(storedCart);
+    }, []);
+    
+    useEffect(() => {
+        localStorage.setItem('addToCart', JSON.stringify(addToCart));
+    }, [addToCart]);
+    
 
     const totalPages = Math.ceil(totalRecords / recordsPerPage); // Calculate total pages
 
@@ -202,7 +212,9 @@ function Home() {
                                     <td>${book.price.toFixed(2)}</td>
                                     <td>
                                         <label>
-                                          <input type="checkbox" onChange={() => toCart(book)}/>
+                                          <input type="checkbox"
+                                          checked ={addToCart.some(cartBook => cartBook.id === book.id)} 
+                                          onChange={() => toCart(book)}/>
                                         </label>
                                     </td>
                                 </tr>
