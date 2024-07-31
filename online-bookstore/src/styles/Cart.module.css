@@ -1,0 +1,29 @@
+.tableContainer {
+    margin-top: 20px;
+    width: 80%;
+    display: flex;
+    flex-direction: column;
+    align-items: center; /* Center the table and pagination */
+}
+
+.booksTable {
+    width: 100%;
+    border-collapse: collapse;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.booksTable th,
+.booksTable td {
+    padding: 10px;
+    border: 1px solid #ccc;
+    text-align: left;
+}
+
+.booksTable th {
+    background-color: #5194d6;
+    color: white;
+}
+
+.booksTable tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
